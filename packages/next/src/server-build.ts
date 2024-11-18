@@ -454,6 +454,7 @@ export async function serverBuild({
     } else {
       const serverTraceLabel = `Tracing initial Next.js server files due to missing build trace`;
       console.time(serverTraceLabel);
+      console.log('starting trace:');
       const result = await nodeFileTrace([nextServerFile], {
         base: baseDir,
         cache: {},
@@ -473,6 +474,8 @@ export async function serverBuild({
           'node_modules/sharp/**/*',
         ],
       });
+      console.log('nft result:');
+      console.log(result);
       initialFileList = Array.from(result.fileList);
       initialFileReasons = result.reasons;
       console.timeEnd(serverTraceLabel);
@@ -781,11 +784,14 @@ export async function serverBuild({
         2
       )}`;
       console.time(traceLabel);
+      console.log('starting trace:');
       traceResult = await nodeFileTrace(pathsToTrace, {
         base: baseDir,
         cache: traceCache,
         processCwd: projectDir,
       });
+      console.log('nft result:');
+      console.log(traceResult);
       traceResult.esmFileList.forEach(file => traceResult?.fileList.add(file));
       parentFilesMap = getFilesMapFromReasons(
         traceResult.fileList,
