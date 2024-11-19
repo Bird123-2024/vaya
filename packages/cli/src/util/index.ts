@@ -1,7 +1,6 @@
 import qs from 'querystring';
 import { parse as parseUrl } from 'url';
 import retry from 'async-retry';
-import ms from 'ms';
 import fetch, { Headers } from 'node-fetch';
 import bytes from 'bytes';
 import chalk from 'chalk';
@@ -9,7 +8,7 @@ import ua from './ua';
 import processDeployment from './deploy/process-deployment';
 import { responseError } from './error';
 import stamp from './output/stamp';
-import { APIError, BuildError } from './errors-ts';
+import { BuildError } from './errors-ts';
 import printIndications from './print-indications';
 import { GitMetadata, Org } from '@vercel-internals/types';
 import { VercelConfig } from './dev/types';
@@ -207,35 +206,6 @@ export default class Now {
   }
 
   async handleDeploymentError(error: any, { env }: any) {
-    if (error.status === 429) {
-      if (error.code === 'builds_rate_limited') {
-        const err = Object.create(APIError.prototype);
-        err.message = error.message;
-        err.status = error.status;
-        err.retryAfter = 'never';
-        err.code = error.code;
-        return err;
-      }
-
-      let msg = 'You have been creating deployments at a very fast pace. ';
-
-      if (error.limit && error.limit.reset) {
-        const { reset } = error.limit;
-        const difference = reset * 1000 - Date.now();
-
-        msg += `Please retry in ${ms(difference, { long: true })}.`;
-      } else {
-        msg += 'Please slow down.';
-      }
-
-      const err = Object.create(APIError.prototype);
-      err.message = msg;
-      err.status = error.status;
-      err.retryAfter = 'never';
-
-      return err;
-    }
-
     // If the deployment domain is missing a cert, bail with the error
     if (error.status === 400 && error.code === 'cert_missing') {
       return responseError(error, null, error);
